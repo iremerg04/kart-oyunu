@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kart Eşleştirme Oyunu</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #f0f0f0;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    #game-board {
+      display: grid;
+      grid-template-columns: repeat(4, 100px);
+      grid-gap: 10px;
+      margin: 20px;
+    }
+    .card {
+      width: 100px;
+      height: 150px;
+      background: #3498db;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      cursor: pointer;
+      position: relative;
+      transform: scale(1);
+      transition: transform 0.3s;
+      overflow: hidden;
+    }
+    .card img {
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+      display: none;
+    }
+    .flipped img {
+      display: block;
+    }
+    .hidden {
+      visibility: hidden;
+    }
+    #status {
+      font-size: 18px;
+      margin-top: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      margin-top: 15px;
+      background: #2ecc71;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #27ae60;
+    }
+  </style>
+</head>
+<body>
+  <h1>Kart Eşleştirme Oyunu</h1>
+  <div id="timer">Süre: 60</div>
+  <button onclick="pauseGame()">Durdur / Devam Et</button>
+  <div id="game-board"></div>
+  <div id="status"></div>
+  <button onclick="startGame()">Yeni Oyun</button>
+
+
+  <script src="script.js">
+    const images = [
+      "images/foto.jpeg",
+      "images/foto2.jpeg",
+      "images/foto3.jpeg",
+      "images/foto4.jpeg",
+      "images/foto5.jpeg",
+      "images/foto6.jpeg",
+      "images/foto7.jpeg",
+      "images/foto8.jpeg"
+    ];
+
+    let firstCard, secondCard;
+    let lockBoard = false;
+    let matches = 0;
+    let timeLeft = 60;
+    let timer;
+
+    function startGame() {
+      const board = document.getElementById("game-board");
+      board.innerHTML = "";
+      document.getElementById("status").innerText = "";
+      matches = 0;
+      timeLeft = 60;
+      clearInterval(timer);
+      document.getElementById("timer").innerText = "Süre: " + timeLeft;
+      timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timer").innerText = "Süre: " + timeLeft;
+        if (timeLeft === 0) {
+          clearInterval(timer);
+          document.getElementById("status").innerText = "Süre bitti! Kaybettiniz.";
+          lockBoard = true;
+        }
+      }, 1000);
+
+      let cards = [...images, ...images];
+      cards.sort(() => 0.5 - Math.random());
+
+      cards.forEach(src => {
+        const card = document.createElement("div");
+        card.classList.add("card");
+        card.innerHTML = `<img src="${src}" alt="card">`;
+        card.addEventListener("click", flipCard);
+        board.appendChild(card);
+      });
+
+      firstCard = null;
+      secondCard = null;
+      lockBoard = false;
+    }
+
+    function flipCard() {
+      if (lockBoard) return;
+      if (this === firstCard) return;
+
+      this.classList.add("flipped");
+
+      if (!firstCard) {
+        firstCard = this;
+        return;
+      }
+
+      secondCard = this;
+      checkMatch();
+    }
+
+    function checkMatch() {
+      let isMatch = firstCard.querySelector("img").src === secondCard.querySelector("img").src;
+      if (isMatch) {
+        disableCards();
+        matches++;
+        if (matches === images.length) {
+          clearInterval(timer);
+          document.getElementById("status").innerText = "Tebrikler! Kazandınız.";
+        }
+      } else {
+        unflipCards();
+      }
+    }
+
+    function disableCards() {
+      firstCard.removeEventListener("click", flipCard);
+      secondCard.removeEventListener("click", flipCard);
+      resetBoard();
+    }
+
+    function unflipCards() {
+      lockBoard = true;
+      setTimeout(() => {
+        firstCard.classList.remove("flipped");
+        secondCard.classList.remove("flipped");
+        resetBoard();
+      }, 1000);
+    }
+
+    function resetBoard() {
+      [firstCard, secondCard] = [null, null];
+      lockBoard = false;
+    }
+
+    // Oyunu başlangıçta başlat
+    startGame();
+  </script>
+</body>
+</html>
